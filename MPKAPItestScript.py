@@ -1,17 +1,18 @@
 import clr
 import os
 import json
-import time
 import pprint
-#import asyncio
+import datetime
+import random
 
 def printFormatted(s):
     pprint.pprint(json.loads(s))
 
 clr.AddReference("System")
 import System
-import os
-apiPath = os.path.join(os.getcwd(), r"MPK_API.dll")
+
+
+apiPath = os.path.join(r"Z:\MLO\bin\Debug\MPK_API.dll")
 
 clr.AddReference(apiPath)
 from MPK_API_CS import *
@@ -20,10 +21,6 @@ class MPKtest():
     def __init__(self, verbose = True):
         self._verbose = verbose
         self._device = MPK_API()
-        self._databasePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\Demo.ttxm"
-        self._sequencePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\Demo Sequence.seqx"
-        self._exportPath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\\"
-        self._exportFileName = r"ExportTest.csv"
 
     ########################
     # INITIALIZATION
@@ -32,28 +29,40 @@ class MPKtest():
         result = self._device.InitializeCamera(sn, False, False)
         if self._verbose:
             printFormatted(result)
+        return result
 
-    def setDatabase(self):
-        result = self._device.SetMeasurementDatabase(self._databasePath)
+    def setDatabase(self, databasePath):
+        result = self._device.SetMeasurementDatabase(databasePath)
         if self._verbose:
             printFormatted(result)
+        return result
 
-    def createDatabase(self):
-        result = self._device.CreateMeasurementDatabase(self._databasePath)
+    def createDatabase(self, databasePath):
+        result = self._device.CreateMeasurementDatabase(databasePath)
         if self._verbose:
             printFormatted(result)
-    def setSequence(self):
-        result = self._device.SetSequence(self._sequencePath)
+        return result
+
+    def setSequence(self, sequencePath):
+        result = self._device.SetSequence(sequencePath)
         if self._verbose:
             printFormatted(result)
+        return result
 
     ########################
     # MEASUREMENT OPERATIONS
     ########################
+    def getPatternList(self):
+        result = json.loads(self._device.GetListOfPatternSetups())
+        if self._verbose:
+            pprint.pprint(result)
+        return result
+
     def getMeasurementList(self):
         result = self._device.GetMeasurementList()
         if self._verbose:
             printFormatted(result)
+        return result
 
     def getNameOfFirstMeasurement(self):
         result = self._device.GetMeasurementList()
@@ -69,51 +78,48 @@ class MPKtest():
         result = self._device.GetMeasurementInfo(imageName)
         if self._verbose:
             printFormatted(result)
+        return result
 
     def editMeasurementInfo(self, imageName, jsonMeasInfo):
         result = self._device.EditMeasurementInfo(imageName, jsonMeasInfo)
         if self._verbose:
             printFormatted(result)
+        return result
 
-    def exportMeasurement(self, imageName):
-        result = self._device.ExportMeasurement(imageName, self._exportPath, self._exportFileName)
+    def exportMeasurement(self, imageName, exportPath, exportFileName, resX = 0, resY = 0):
+        result = self._device.ExportMeasurement(imageName, exportPath, exportFileName, resX, resY)
         if self._verbose:
             print(result)
             # printFormatted(result)
+        return result
 
-    def exportMeasurementAndResize(self, imageName, resX, resY):
-        result = self._device.ExportMeasurement(imageName, self._exportPath, self._exportFileName, resX, resY)
-        if self._verbose:
-            print(result)
     ########################
     # SEQUENCING
     ########################
-    def sequenceRunAll(self):
-        result = self._device.RunAllSequenceSteps()
+    def sequenceRunAll(self, patternName, useCamera = True, saveImages = True):
+        result = self._device.RunAllSequenceSteps(patternName, useCamera, saveImages)
         if self._verbose:
             printFormatted(result)
+        return result
 
-    def sequenceRunAllWithCamera(self, useCamera, saveImages):
-        result = self._device.RunAllSequenceSteps(useCamera, saveImages)
-        if self._verbose:
-            printFormatted(result)
+    # def sequenceRunAllWithCamera(self, useCamera, saveImages):
+    #     result = self._device.RunAllSequenceSteps(useCamera, saveImages)
+    #     if self._verbose:
+    #         printFormatted(result)
 
-    def sequenceRunStep(self, step):
-        result = self._device.RunSequenceStepByName(step)
+    def sequenceRunStep(self, step, patternName = "", useCamera = True, saveImages = True):
+        result = self._device.RunSequenceStepByName(step, patternName, useCamera, saveImages)
         if self._verbose:
             printFormatted(result)
             #printFormatted(result)
+        return result
 
-    def sequenceRunStepList(self, stepList):
-        result = self._device.RunSequenceStepListByName(stepList)
+    def sequenceRunStepList(self, stepList, patternName, useCamera = True, saveImages = True):
+        result = self._device.RunSequenceStepListByName(stepList, patternName, useCamera, saveImages)
         if self._verbose:
             printFormatted(result)
             # printFormatted(result)
-
-    def sequenceStop(self):
-        result = self._device.SequenceStop()
-        if self._verbose:
-            printFormatted(result)
+        return result
 
 if __name__ == "__main__":
     verbose = True
@@ -121,22 +127,29 @@ if __name__ == "__main__":
     testSequencing = False
     testMeasurementOperations = False
     testMeasurementInfoEdit = False
-    testExport = True
+    testExportPNG = True
+    testExportConoscope = True
 
     device = MPKtest(verbose)
-    device._databasePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\ConoscopeTest.ttxm"
-    device._sequencePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\Demo Sequence.seqx"
+    databasePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\Demo.ttxm"
+    # databasePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\\" + str(random.randint(0, 1000)) + ".ttxm"
+
+
+    sequencePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\Demo Sequence.seqx"
 
     device.initializeCamera("Demo")
-    device.setDatabase()
-    device.setSequence()
+    device.setDatabase(databasePath)
+    # device.createDatabase()
+    device.setSequence(sequencePath)
 
     if testSequencing:
         useCamera = True
         saveMeasurements = True
-        device.sequenceRunAll()
+        # device.sequenceRunAll()
         # device.sequenceRunAllWithCamera(useCamera, saveMeasurements)
-        # device.sequenceRunStep("ANSI Brightness")
+        pattern = device.getPatternList()[0]
+        device.sequenceRunStep("Particle Defects", pattern)
+
         # device.sequenceRunStepList(["Gradient", "ANSI Brightness"])
 
     if testMeasurementOperations:
@@ -160,11 +173,17 @@ if __name__ == "__main__":
         device.editMeasurementInfo(ID, json.dumps(measurementInfoDict))
         device.getMeasurementInfo(ID)
 
-    if testExport:
-        name = device.getNameOfFirstMeasurement()
-        device._exportPath = r"C:\Radiant Vision Systems Data\TrueTest\UserData"
-        device._exportFileName = r"ExportTest.csv"
-        device.exportMeasurementAndResize(name, 100, 100)
+    if testExportPNG:
+        measList = json.loads(device.getMeasurementList())
+        exportPath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\ExportTest\\"
+        for meas in measList:
+            exportName = meas["Description"] + "_" + meas["Measurement Setup"] + ".png"
+            measID = meas["Measurement ID"]
+            device.exportMeasurement(measID, exportPath, exportName)
+        # name = device.getNameOfFirstMeasurement()
+        # device._exportPath = r"C:\Radiant Vision Systems Data\TrueTest\UserData"
+        # device._exportFileName = r"ExportTest.csv"
+        # device.exportMeasurementAndResize(name, 100, 100)
         # device._exportFileName = r"ExportTest.png"
         # device.exportMeasurement(name)
         # device._exportFileName = r"ExportTest.jpg"
@@ -176,3 +195,14 @@ if __name__ == "__main__":
         # device._exportFileName = ""
         # device.exportMeasurement(name)
 
+    if testExportConoscope:
+        databasePath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\ConoscopeTest.ttxm"
+        device.setDatabase(databasePath)
+        measList = json.loads(device.getMeasurementList())
+        exportPath = r"C:\Radiant Vision Systems Data\TrueTest\UserData\ExportTest\\"
+        resX = 100
+        resY = 100
+        for meas in measList:
+            exportName = meas["Description"] + ".csv"
+            measID = meas["Measurement ID"]
+            device.exportMeasurement(measID, exportPath, exportName, resX, resY)
