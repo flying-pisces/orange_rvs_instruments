@@ -11,8 +11,8 @@ def printFormatted(s):
 clr.AddReference("System")
 import System
 
-
-apiPath = os.path.join(r"Z:\MLO\bin\Debug\MPK_API.dll")
+apiPath = os.path.join(os.getcwd(), "MPK_API.dll")
+#apiPath = os.path.join(r"Z:\MLO\bin\Debug\MPK_API.dll")
 
 clr.AddReference(apiPath)
 from MPK_API_CS import *
